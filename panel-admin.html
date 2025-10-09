@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - SECOP II</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#233a79',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-full px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo y título -->
+                <div class="flex items-center">
+                    <h1 class="text-xl sm:text-2xl font-bold text-primary">SECOP II</h1>
+                    <span class="hidden sm:inline text-gray-400 mx-3">|</span>
+                    <span class="hidden sm:inline text-sm text-gray-600" id="entityName">Panel de Administración</span>
+                </div>
+
+                <!-- Usuario y opciones -->
+                <div class="flex items-center space-x-4">
+                    <div class="hidden sm:block text-right">
+                        <p class="text-sm font-medium text-gray-800">leonardo fabio mora gallardo</p>
+                        <p class="text-xs text-gray-500" id="selectedEntity">Entidad seleccionada</p>
+                    </div>
+                    <button class="text-gray-600 hover:text-primary transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                    </button>
+                    <button onclick="window.location.href='login.html'" class="text-gray-600 hover:text-primary transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-full px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Título y botón de cargar documento -->
+        <div class="mb-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-1">Buscar Contrato</h2>
+                    <p class="text-sm text-gray-600">Últimas modificaciones</p>
+                </div>
+                <button
+                    onclick="document.getElementById('uploadModal').classList.remove('hidden')"
+                    class="w-full sm:w-auto bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition duration-200 shadow-md flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    Cargar Documento
+                </button>
+            </div>
+
+            <!-- Barra de búsqueda y búsqueda avanzada -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input
+                        type="text"
+                        placeholder="Buscar por ID, número de contrato, entidad..."
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    />
+                    <button class="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-opacity-90 transition duration-200">
+                        Buscar
+                    </button>
+                    <button class="text-primary border border-primary px-4 py-2 rounded-lg hover:bg-primary hover:bg-opacity-5 transition duration-200 whitespace-nowrap">
+                        (Búsqueda avanzada)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de contratos -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <!-- Tabla responsive -->
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-max">
+                    <thead>
+                        <tr class="bg-blue-100 border-b border-gray-200">
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                                <button class="flex items-center gap-1 hover:text-primary">
+                                    Id del contrato
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                                    </svg>
+                                </button>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                                <button class="flex items-center gap-1 hover:text-primary">
+                                    Número del Contrato
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                                    </svg>
+                                </button>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                                <button class="flex items-center gap-1 hover:text-primary">
+                                    Entidad Estatal
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                                    </svg>
+                                </button>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                                Tipo de entidad
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                                <button class="flex items-center gap-1 hover:text-primary">
+                                    Fecha de firma
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                                    </svg>
+                                </button>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                                <button class="flex items-center gap-1 hover:text-primary">
+                                    Fecha de finalización
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                                    </svg>
+                                </button>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                                Facturación de la entidad
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                                Valor total de la oferta
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                                Estado
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                                Acciones
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <!-- Fila 1 -->
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">5692359</td>
+                            <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">CCE-410-2024</td>
+                            <td class="px-4 py-3 text-sm whitespace-nowrap">
+                                <a href="#" class="text-blue-600 hover:underline">COLOMBIA COMPRA EFICIENTE</a>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">Entidad Estatal</td>
+                            <td class="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                                29/11/2024 8:00:00 AM
+                                <div class="text-xs text-gray-500">(UTC-05:00) Bogotá, Lima, Quito</div>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                                31/12/2024 11:59:00 PM
+                                <div class="text-xs text-gray-500">(UTC-05:00) Bogotá, Lima, Quito</div>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">leonardo fabio mora gallardo</td>
+                            <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap font-semibold">9.984.000 COP</td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span class="px-3 py-1 text-xs font-semibold text-gray-700 bg-gray-200 rounded-full">Cerrado</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm whitespace-nowrap">
+                                <a href="#" class="text-blue-600 hover:underline">Detalle</a>
+                            </td>
+                        </tr>
+                        <!-- Fila 2 -->
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">6020242</td>
+                            <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">CCE-224-2025</td>
+                            <td class="px-4 py-3 text-sm whitespace-nowrap">
+                                <a href="#" class="text-blue-600 hover:underline">COLOMBIA COMPRA EFICIENTE</a>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">Entidad Estatal</td>
+                            <td class="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                                3/03/2025 12:00:00 PM
+                                <div class="text-xs text-gray-500">(UTC-05:00) Bogotá, Lima, Quito</div>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                                31/12/2025 11:59:00 PM
+                                <div class="text-xs text-gray-500">(UTC-05:00) Bogotá, Lima, Quito</div>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">leonardo fabio mora gallardo</td>
+                            <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap font-semibold">96.278.000 COP</td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span class="px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">En ejecución</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm whitespace-nowrap">
+                                <a href="#" class="text-blue-600 hover:underline">Detalle</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            <div class="bg-gray-50 px-4 py-3 border-t border-gray-200">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <p class="text-sm text-gray-700">
+                        Mostrando <span class="font-semibold">1</span> a <span class="font-semibold">2</span> de <span class="font-semibold">2</span> resultados
+                    </p>
+                    <div class="flex gap-2">
+                        <button class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            Anterior
+                        </button>
+                        <button class="px-3 py-1 border border-primary bg-primary text-white rounded-md text-sm font-medium">
+                            1
+                        </button>
+                        <button class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            Siguiente
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Cargar Documento -->
+    <div id="uploadModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Cargar Documento</h3>
+                <button onclick="document.getElementById('uploadModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="uploadForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Seleccione el archivo
+                    </label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition cursor-pointer">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <p class="mt-2 text-sm text-gray-600">
+                            Arrastra y suelta tu archivo aquí, o
+                            <label class="text-primary hover:underline cursor-pointer">
+                                <input type="file" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx" />
+                                haz clic para seleccionar
+                            </label>
+                        </p>
+                        <p class="mt-1 text-xs text-gray-500">PDF, DOC, DOCX, XLS, XLSX (MAX. 10MB)</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Descripción
+                    </label>
+                    <textarea
+                        rows="3"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                        placeholder="Descripción del documento (opcional)"></textarea>
+                </div>
+
+                <div class="flex gap-3">
+                    <button
+                        type="button"
+                        onclick="document.getElementById('uploadModal').classList.add('hidden')"
+                        class="flex-1 border-2 border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-50 transition duration-200">
+                        Cancelar
+                    </button>
+                    <button
+                        type="submit"
+                        class="flex-1 bg-primary text-white py-2 px-4 rounded-lg font-semibold hover:bg-opacity-90 transition duration-200">
+                        Cargar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Cargar entidad seleccionada
+        window.addEventListener('DOMContentLoaded', function() {
+            const entity = sessionStorage.getItem('selectedEntity');
+            if (entity) {
+                document.getElementById('selectedEntity').textContent = entity;
+            }
+        });
+
+        // Manejar envío del formulario de carga
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Documento cargado exitosamente');
+            document.getElementById('uploadModal').classList.add('hidden');
+        });
+    </script>
+</body>
+</html>
