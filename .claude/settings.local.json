@@ -3,7 +3,11 @@
     "allow": [
       "Bash(move:*)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: Sistema de gestión de contratos SECOP II\n\n- Implementación de página de login con autenticación por correo\n- Página de selección de entidad con múltiples opciones\n- Panel de administración con tabla de contratos\n- Diseño responsive con Tailwind CSS\n- Estructura de proyecto organizada\n- Documentación completa en README\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
