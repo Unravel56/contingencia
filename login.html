@@ -30,31 +30,194 @@
         <div class="bg-white rounded-lg shadow-lg border border-gray-200 p-8">
             <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Iniciar Sesión</h2>
 
-            <form id="loginForm" class="space-y-6">
-                <!-- Campo Usuario/Correo SECOP II -->
+            <!-- Paso 1: Selección de Tipo de Usuario -->
+            <div id="userTypeSelection" class="space-y-4">
+                <p class="text-sm text-gray-600 text-center mb-4">Seleccione el tipo de usuario:</p>
+
+                <button
+                    type="button"
+                    onclick="selectUserType('entidad')"
+                    class="w-full bg-white border-2 border-primary text-primary py-4 px-6 rounded-lg font-semibold hover:bg-primary hover:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition duration-200 shadow-md"
+                >
+                    <div class="flex items-center justify-center">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                        Entidad
+                    </div>
+                </button>
+
+                <button
+                    type="button"
+                    onclick="selectUserType('administrador')"
+                    class="w-full bg-white border-2 border-primary text-primary py-4 px-6 rounded-lg font-semibold hover:bg-primary hover:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition duration-200 shadow-md"
+                >
+                    <div class="flex items-center justify-center">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Administrador
+                    </div>
+                </button>
+            </div>
+
+            <!-- Paso 2: Formulario para Entidad (autenticación por email) -->
+            <form id="entidadForm" class="space-y-6 hidden">
+                <button
+                    type="button"
+                    onclick="backToSelection()"
+                    class="text-primary hover:text-opacity-80 text-sm flex items-center mb-4"
+                >
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                    Volver
+                </button>
+
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                        Correo Electrónico SECOP II
+                    <label for="entidadEmail" class="block text-sm font-medium text-gray-700 mb-2">
+                        Correo Electrónico
                     </label>
                     <input
                         type="email"
-                        id="email"
-                        name="email"
+                        id="entidadEmail"
+                        name="entidadEmail"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition duration-200"
-                        placeholder="correo@ejemplo.com"
+                        placeholder="correo@entidad.gov.co"
                         required
                     />
                 </div>
 
-                <!-- Botón de Ingresar -->
                 <button
                     type="submit"
-                    id="loginBtn"
+                    id="entidadBtn"
                     class="w-full bg-primary text-white py-3 px-4 rounded-lg font-semibold hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition duration-200 shadow-md"
                 >
-                    Ingresar
+                    Enviar Código de Verificación
+                </button>
+
+                <p class="text-xs text-gray-500 text-center">
+                    Se enviará un código de verificación a su correo electrónico
+                </p>
+            </form>
+
+            <!-- Paso 2.5: Verificación de Código -->
+            <form id="codeVerificationForm" class="space-y-6 hidden">
+                <button
+                    type="button"
+                    onclick="backToEmailInput()"
+                    class="text-primary hover:text-opacity-80 text-sm flex items-center mb-4"
+                >
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                    Volver
+                </button>
+
+                <div class="text-center mb-4">
+                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-4">
+                        <svg class="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900">Código Enviado</h3>
+                    <p class="text-sm text-gray-500 mt-2">
+                        Ingrese el código de 6 dígitos enviado a<br>
+                        <strong id="displayEmail" class="text-primary"></strong>
+                    </p>
+                </div>
+
+                <div>
+                    <label for="verificationCode" class="block text-sm font-medium text-gray-700 mb-2">
+                        Código de Verificación
+                    </label>
+                    <input
+                        type="text"
+                        id="verificationCode"
+                        name="verificationCode"
+                        maxlength="6"
+                        pattern="[0-9]{6}"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition duration-200 text-center text-2xl tracking-widest font-semibold"
+                        placeholder="000000"
+                        required
+                    />
+                </div>
+
+                <button
+                    type="submit"
+                    id="verifyCodeBtn"
+                    class="w-full bg-primary text-white py-3 px-4 rounded-lg font-semibold hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition duration-200 shadow-md"
+                >
+                    Verificar Código
+                </button>
+
+                <div class="text-center">
+                    <button
+                        type="button"
+                        onclick="resendCode()"
+                        id="resendCodeBtn"
+                        class="text-sm text-primary hover:text-opacity-80"
+                    >
+                        Reenviar código
+                    </button>
+                </div>
+
+                <p class="text-xs text-gray-500 text-center">
+                    El código expira en 10 minutos
+                </p>
+            </form>
+
+            <!-- Paso 3: Formulario para Administrador (usuario y contraseña) -->
+            <form id="adminForm" class="space-y-6 hidden">
+                <button
+                    type="button"
+                    onclick="backToSelection()"
+                    class="text-primary hover:text-opacity-80 text-sm flex items-center mb-4"
+                >
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                    Volver
+                </button>
+
+                <div>
+                    <label for="adminUser" class="block text-sm font-medium text-gray-700 mb-2">
+                        Usuario / Correo
+                    </label>
+                    <input
+                        type="text"
+                        id="adminUser"
+                        name="adminUser"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition duration-200"
+                        placeholder="usuario@secop.gov.co"
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label for="adminPassword" class="block text-sm font-medium text-gray-700 mb-2">
+                        Contraseña
+                    </label>
+                    <input
+                        type="password"
+                        id="adminPassword"
+                        name="adminPassword"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition duration-200"
+                        placeholder="••••••••"
+                        required
+                    />
+                </div>
+
+                <button
+                    type="submit"
+                    id="adminBtn"
+                    class="w-full bg-primary text-white py-3 px-4 rounded-lg font-semibold hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition duration-200 shadow-md"
+                >
+                    Iniciar Sesión
                 </button>
             </form>
+
         </div>
 
         <!-- Footer -->
@@ -64,61 +227,258 @@
     </div>
 
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        let currentUserType = null;
+        let currentEmail = null;
+        let generatedCode = null;
+
+        // Función para seleccionar tipo de usuario
+        function selectUserType(type) {
+            currentUserType = type;
+            document.getElementById('userTypeSelection').classList.add('hidden');
+
+            if (type === 'entidad') {
+                document.getElementById('entidadForm').classList.remove('hidden');
+            } else if (type === 'administrador') {
+                document.getElementById('adminForm').classList.remove('hidden');
+            }
+        }
+
+        // Función para volver a la selección
+        function backToSelection() {
+            currentUserType = null;
+            currentEmail = null;
+            generatedCode = null;
+            document.getElementById('userTypeSelection').classList.remove('hidden');
+            document.getElementById('entidadForm').classList.add('hidden');
+            document.getElementById('adminForm').classList.add('hidden');
+            document.getElementById('codeVerificationForm').classList.add('hidden');
+
+            // Limpiar campos
+            document.getElementById('entidadEmail').value = '';
+            document.getElementById('verificationCode').value = '';
+            document.getElementById('adminUser').value = '';
+            document.getElementById('adminPassword').value = '';
+        }
+
+        // Función para volver al input de email
+        function backToEmailInput() {
+            document.getElementById('codeVerificationForm').classList.add('hidden');
+            document.getElementById('entidadForm').classList.remove('hidden');
+            document.getElementById('verificationCode').value = '';
+        }
+
+        // Manejador de formulario para Entidad
+        document.getElementById('entidadForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            const email = document.getElementById('email').value;
-            const loginBtn = document.getElementById('loginBtn');
+            const email = document.getElementById('entidadEmail').value;
+            const submitBtn = document.getElementById('entidadBtn');
 
-            // Deshabilitar botón durante el proceso
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = 'Procesando...';
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Enviando...';
 
             try {
-                // Simular llamada a Stored Procedure (SP)
-                // En producción, aquí iría la llamada al backend que ejecuta el SP
-                const response = await simulateStoredProcedure(email);
+                // Simular envío de código de verificación
+                const response = await sendVerificationCode(email);
 
                 if (response.success) {
-                    // Guardar información del usuario en sessionStorage
-                    sessionStorage.setItem('userEmail', email);
-                    sessionStorage.setItem('userName', response.userName);
+                    // Guardar email y código generado
+                    currentEmail = email;
+                    generatedCode = response.code;
 
-                    // Redirigir a la página de selección de entidad
-                    window.location.href = 'seleccion-entidad.html';
+                    // Mostrar formulario de verificación
+                    document.getElementById('entidadForm').classList.add('hidden');
+                    document.getElementById('codeVerificationForm').classList.remove('hidden');
+                    document.getElementById('displayEmail').textContent = email;
+
+                    // Log del código para pruebas (en producción esto NO se haría)
+                    console.log('Código de verificación:', response.code);
                 } else {
-                    alert('Usuario no encontrado. Por favor verifique su correo.');
-                    loginBtn.disabled = false;
-                    loginBtn.innerHTML = 'Ingresar';
+                    alert('Error al enviar el código. Por favor intente nuevamente.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Enviar Código de Verificación';
                 }
             } catch (error) {
-                console.error('Error al autenticar:', error);
+                console.error('Error:', error);
                 alert('Error al procesar la solicitud. Intente nuevamente.');
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = 'Ingresar';
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Enviar Código de Verificación';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Enviar Código de Verificación';
             }
         });
 
-        // Función que simula la llamada a un Stored Procedure
-        // En producción, esto sería reemplazado por una llamada fetch/axios al backend
-        async function simulateStoredProcedure(email) {
+        // Manejador de formulario para verificación de código
+        document.getElementById('codeVerificationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const code = document.getElementById('verificationCode').value;
+            const submitBtn = document.getElementById('verifyCodeBtn');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Verificando...';
+
+            try {
+                // Validar el código
+                const response = await verifyCode(currentEmail, code, generatedCode);
+
+                if (response.success) {
+                    // Guardar información del usuario en sessionStorage
+                    sessionStorage.setItem('userEmail', currentEmail);
+                    sessionStorage.setItem('userName', response.userName);
+                    sessionStorage.setItem('userType', 'entidad');
+
+                    // Redirigir a la selección de entidad
+                    window.location.href = 'seleccion-entidad.html';
+                } else {
+                    alert('Código incorrecto. Por favor verifique e intente nuevamente.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Verificar Código';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al verificar el código. Intente nuevamente.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Verificar Código';
+            }
+        });
+
+        // Manejador de formulario para Administrador
+        document.getElementById('adminForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const user = document.getElementById('adminUser').value;
+            const password = document.getElementById('adminPassword').value;
+            const submitBtn = document.getElementById('adminBtn');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Validando...';
+
+            try {
+                // Simular autenticación de administrador
+                const response = await authenticateAdmin(user, password);
+
+                if (response.success) {
+                    // Guardar información del usuario en sessionStorage
+                    sessionStorage.setItem('userEmail', user);
+                    sessionStorage.setItem('userName', response.userName);
+                    sessionStorage.setItem('userType', 'administrador');
+
+                    // Redirigir al panel de administrador
+                    window.location.href = 'panel-admin.html';
+                } else {
+                    alert('Usuario o contraseña incorrectos.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Iniciar Sesión';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al procesar la solicitud. Intente nuevamente.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Iniciar Sesión';
+            }
+        });
+
+        // Función para generar código de 6 dígitos
+        function generateVerificationCode() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        // Función que simula el envío de código de verificación
+        async function sendVerificationCode(email) {
             return new Promise((resolve) => {
                 setTimeout(() => {
-                    // Simulación: cualquier correo válido es aceptado
-                    // En producción, el SP validaría contra la base de datos
                     if (email && email.includes('@')) {
+                        // Generar código de 6 dígitos
+                        const code = generateVerificationCode();
+
+                        // En producción, aquí se llamaría al backend para enviar el email con el código
+                        console.log(`Enviando código ${code} al email ${email}`);
+
+                        resolve({
+                            success: true,
+                            code: code,
+                            message: 'Código enviado correctamente'
+                        });
+                    } else {
+                        resolve({
+                            success: false,
+                            message: 'Email inválido'
+                        });
+                    }
+                }, 1000);
+            });
+        }
+
+        // Función para verificar el código
+        async function verifyCode(email, code, correctCode) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    if (code === correctCode) {
                         resolve({
                             success: true,
                             userName: email.split('@')[0],
+                            message: 'Código válido'
+                        });
+                    } else {
+                        resolve({
+                            success: false,
+                            message: 'Código inválido'
+                        });
+                    }
+                }, 800);
+            });
+        }
+
+        // Función para reenviar código
+        async function resendCode() {
+            if (!currentEmail) {
+                alert('Error al reenviar el código.');
+                return;
+            }
+
+            const resendBtn = document.getElementById('resendCodeBtn');
+            resendBtn.disabled = true;
+            resendBtn.textContent = 'Reenviando...';
+
+            try {
+                const response = await sendVerificationCode(currentEmail);
+                if (response.success) {
+                    generatedCode = response.code;
+                    console.log('Nuevo código de verificación:', response.code);
+                    alert('Se ha enviado un nuevo código a su correo.');
+                } else {
+                    alert('Error al reenviar el código.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al reenviar el código.');
+            } finally {
+                resendBtn.disabled = false;
+                resendBtn.textContent = 'Reenviar código';
+            }
+        }
+
+        // Función que simula la autenticación de administrador
+        async function authenticateAdmin(user, password) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    // Simulación: usuario "admin" con contraseña "admin123"
+                    // En producción, esto validaría contra la base de datos
+                    if (user === 'admin' && password === 'admin123') {
+                        resolve({
+                            success: true,
+                            userName: 'Administrador',
                             message: 'Autenticación exitosa'
                         });
                     } else {
                         resolve({
                             success: false,
-                            message: 'Usuario no encontrado'
+                            message: 'Credenciales inválidas'
                         });
                     }
-                }, 800); // Simula latencia de red
+                }, 800);
             });
         }
     </script>

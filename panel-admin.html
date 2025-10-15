@@ -16,6 +16,38 @@
             }
         }
     </script>
+    <style>
+        /* Estilos para los tabs */
+        .tab-button {
+            border-bottom-color: transparent;
+            color: #6b7280;
+        }
+        .tab-button:hover {
+            color: #233a79;
+            border-bottom-color: #d1d5db;
+        }
+        .tab-button.active {
+            color: #233a79;
+            border-bottom-color: #233a79;
+            background-color: white;
+        }
+
+        /* Mejorar el scroll del contenido */
+        .tab-content {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <!-- Header -->
@@ -59,7 +91,9 @@
                     <h2 class="text-2xl font-bold text-gray-800 mb-1">Buscar Contrato</h2>
                     <p class="text-sm text-gray-600">Últimas modificaciones</p>
                 </div>
+                <!-- Botón solo visible para entidades, no para administradores -->
                 <button
+                    id="cargarContratoBtn"
                     onclick="document.getElementById('uploadModal').classList.remove('hidden')"
                     class="w-full sm:w-auto bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition duration-200 shadow-md flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,10 +108,12 @@
                 <div class="flex flex-col sm:flex-row gap-3">
                     <input
                         type="text"
+                        id="searchInput"
                         placeholder="Buscar por ID, número de contrato, entidad..."
                         class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                        onkeyup="handleSearchKeyup(event)"
                     />
-                    <button class="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-opacity-90 transition duration-200">
+                    <button onclick="buscarContratos()" class="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-opacity-90 transition duration-200">
                         Buscar
                     </button>
                 </div>
@@ -148,7 +184,7 @@
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200">
+                    <tbody id="contractsTableBody" class="divide-y divide-gray-200">
                         <!-- Fila 1 -->
                         <tr class="hover:bg-gray-50 transition">
                             <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">5692359</td>
@@ -225,79 +261,742 @@
         </div>
     </main>
 
-    <!-- Modal de Cargar Documento -->
-    <div id="uploadModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-800">Carga de Contrato</h3>
-                <button onclick="document.getElementById('uploadModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-
-            <form id="uploadForm" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Seleccione el archivo
-                    </label>
-                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition cursor-pointer">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+    <!-- Modal de Cargar Contrato -->
+    <div id="uploadModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
+        <div class="min-h-screen px-4 py-8 flex items-center justify-center">
+            <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] flex flex-col">
+                <!-- Header del Modal (Fixed) -->
+                <div class="flex justify-between items-center p-6 border-b border-gray-200 bg-white rounded-t-lg flex-shrink-0">
+                    <h3 class="text-2xl font-bold text-gray-800">Carga de Contrato</h3>
+                    <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-600 transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
-                        <p class="mt-2 text-sm text-gray-600">
-                            Arrastra y suelta tu archivo aquí, o
-                            <label class="text-primary hover:underline cursor-pointer">
-                                <input type="file" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx" />
-                                haz clic para seleccionar
+                    </button>
+                </div>
+
+                <!-- Tabs Navigation (Fixed) -->
+                <div class="border-b border-gray-200 bg-gray-50 flex-shrink-0">
+                    <nav class="flex -mb-px overflow-x-auto">
+                        <button
+                            type="button"
+                            onclick="switchTab(1)"
+                            id="tab-1"
+                            class="tab-button active whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
+                            1. Información General
+                        </button>
+                        <button
+                            type="button"
+                            onclick="switchTab(2)"
+                            id="tab-2"
+                            class="tab-button whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
+                            2. Sección 2
+                        </button>
+                        <button
+                            type="button"
+                            onclick="switchTab(3)"
+                            id="tab-3"
+                            class="tab-button whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
+                            3. Sección 3
+                        </button>
+                        <button
+                            type="button"
+                            onclick="switchTab(4)"
+                            id="tab-4"
+                            class="tab-button whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors">
+                            4. Sección 4
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Contenido del Formulario (Scrollable) -->
+                <form id="uploadForm" class="flex-1 overflow-y-auto">
+                    <div class="p-6">
+                        <!-- Tab 1: Información General -->
+                        <div id="tab-content-1" class="tab-content">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Número del proceso -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Número del proceso
                             </label>
-                        </p>
-                        <p class="mt-1 text-xs text-gray-500">PDF, DOC, DOCX, XLS, XLSX (MAX. 10MB)</p>
+                            <input
+                                type="text"
+                                id="numeroProceso"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                placeholder="Ingrese el número del proceso (opcional)"
+                            />
+                        </div>
+
+                        <!-- Número del contrato -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Número del contrato <span class="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="numeroContrato"
+                                required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                placeholder="Texto, números y caracteres especiales"
+                            />
+                        </div>
+
+                        <!-- Objeto del contrato -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Objeto del contrato <span class="text-red-500">*</span>
+                            </label>
+                            <textarea
+                                id="objetoContrato"
+                                required
+                                rows="3"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                placeholder="Describa el objeto del contrato"></textarea>
+                        </div>
+
+                        <!-- Tipo de contrato -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Tipo de contrato <span class="text-red-500">*</span>
+                            </label>
+                            <select
+                                id="tipoContrato"
+                                required
+                                onchange="toggleOtroTipoContrato()"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="">Seleccione el tipo de contrato</option>
+                                <option value="prestacion_servicios">Prestación de Servicios</option>
+                                <option value="compraventa">Compraventa</option>
+                                <option value="suministro">Suministro</option>
+                                <option value="obra">Obra</option>
+                                <option value="consultoría">Consultoría</option>
+                                <option value="concesion">Concesión</option>
+                                <option value="arrendamiento">Arrendamiento</option>
+                                <option value="otro">OTRO</option>
+                            </select>
+                        </div>
+
+                        <!-- Campo de texto para OTRO tipo de contrato (oculto por defecto) -->
+                        <div id="otroTipoContratoContainer" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Especifique el tipo de contrato <span class="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="otroTipoContrato"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                placeholder="Ingrese el tipo de contrato"
+                            />
+                        </div>
+
+                        <!-- Justificación del tipo de contrato -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Justificación del tipo de contrato <span class="text-red-500">*</span>
+                            </label>
+                            <select
+                                id="justificacionTipo"
+                                required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="">Seleccione la justificación</option>
+                                <option value="pendiente">Pendiente por definir (SOLICITAR LISTA A MARCELA)</option>
+                            </select>
+                        </div>
+
+                        <!-- Valor del contrato -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Valor del contrato <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-2 text-gray-500">$</span>
+                                <input
+                                    type="number"
+                                    id="valorContrato"
+                                    required
+                                    min="0"
+                                    step="0.01"
+                                    class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    placeholder="0.00"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Destinación del gasto -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Destinación del gasto <span class="text-red-500">*</span>
+                            </label>
+                            <select
+                                id="destinacionGasto"
+                                required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="">Seleccione la destinación</option>
+                                <option value="funcionamiento">Funcionamiento</option>
+                                <option value="inversion">Inversión</option>
+                            </select>
+                        </div>
+
+                        <!-- Fuente de los recursos -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                Fuente de los recursos <span class="text-red-500">*</span>
+                            </label>
+                            <div class="border border-gray-300 rounded-lg p-4 space-y-4">
+                                <!-- PGN -->
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-medium text-gray-700">Presupuesto General de la Nación - PGN</span>
+                                        <div class="flex items-center space-x-4">
+                                            <label class="flex items-center space-x-2 cursor-pointer">
+                                                <input type="radio" name="fuente_pgn" value="si" onchange="toggleValorFuente('pgn', true)" class="text-primary focus:ring-primary" />
+                                                <span class="text-sm">Sí</span>
+                                            </label>
+                                            <label class="flex items-center space-x-2 cursor-pointer">
+                                                <input type="radio" name="fuente_pgn" value="no" onchange="toggleValorFuente('pgn', false)" checked class="text-primary focus:ring-primary" />
+                                                <span class="text-sm">No</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div id="valor_pgn_container" class="hidden pl-4">
+                                        <div class="flex items-center space-x-2">
+                                            <label class="text-sm text-gray-600 w-16">Valor</label>
+                                            <input type="number" id="valor_pgn" min="0" step="0.01" onchange="calcularTotalFuentes()" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="0.00" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- SGP -->
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-medium text-gray-700">Sistema General de Participaciones - SGP</span>
+                                        <div class="flex items-center space-x-4">
+                                            <label class="flex items-center space-x-2 cursor-pointer">
+                                                <input type="radio" name="fuente_sgp" value="si" onchange="toggleValorFuente('sgp', true)" class="text-primary focus:ring-primary" />
+                                                <span class="text-sm">Sí</span>
+                                            </label>
+                                            <label class="flex items-center space-x-2 cursor-pointer">
+                                                <input type="radio" name="fuente_sgp" value="no" onchange="toggleValorFuente('sgp', false)" checked class="text-primary focus:ring-primary" />
+                                                <span class="text-sm">No</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div id="valor_sgp_container" class="hidden pl-4">
+                                        <div class="flex items-center space-x-2">
+                                            <label class="text-sm text-gray-600 w-16">Valor</label>
+                                            <input type="number" id="valor_sgp" min="0" step="0.01" onchange="calcularTotalFuentes()" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="0.00" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- SGR -->
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-medium text-gray-700">Sistema General de Regalías - SGR</span>
+                                        <div class="flex items-center space-x-4">
+                                            <label class="flex items-center space-x-2 cursor-pointer">
+                                                <input type="radio" name="fuente_sgr" value="si" onchange="toggleValorFuente('sgr', true)" class="text-primary focus:ring-primary" />
+                                                <span class="text-sm">Sí</span>
+                                            </label>
+                                            <label class="flex items-center space-x-2 cursor-pointer">
+                                                <input type="radio" name="fuente_sgr" value="no" onchange="toggleValorFuente('sgr', false)" checked class="text-primary focus:ring-primary" />
+                                                <span class="text-sm">No</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div id="valor_sgr_container" class="hidden pl-4">
+                                        <div class="flex items-center space-x-2">
+                                            <label class="text-sm text-gray-600 w-16">Valor</label>
+                                            <input type="number" id="valor_sgr" min="0" step="0.01" onchange="calcularTotalFuentes()" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="0.00" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Recursos Propios -->
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-medium text-gray-700">Recursos Propios (Alcaldías y Gobernaciones)</span>
+                                        <div class="flex items-center space-x-4">
+                                            <label class="flex items-center space-x-2 cursor-pointer">
+                                                <input type="radio" name="fuente_propios" value="si" onchange="toggleValorFuente('propios', true)" class="text-primary focus:ring-primary" />
+                                                <span class="text-sm">Sí</span>
+                                            </label>
+                                            <label class="flex items-center space-x-2 cursor-pointer">
+                                                <input type="radio" name="fuente_propios" value="no" onchange="toggleValorFuente('propios', false)" checked class="text-primary focus:ring-primary" />
+                                                <span class="text-sm">No</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div id="valor_propios_container" class="hidden pl-4">
+                                        <div class="flex items-center space-x-2">
+                                            <label class="text-sm text-gray-600 w-16">Valor</label>
+                                            <input type="number" id="valor_propios" min="0" step="0.01" onchange="calcularTotalFuentes()" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="0.00" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Recursos de Crédito -->
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-medium text-gray-700">Recursos de Crédito</span>
+                                        <div class="flex items-center space-x-4">
+                                            <label class="flex items-center space-x-2 cursor-pointer">
+                                                <input type="radio" name="fuente_credito" value="si" onchange="toggleValorFuente('credito', true)" class="text-primary focus:ring-primary" />
+                                                <span class="text-sm">Sí</span>
+                                            </label>
+                                            <label class="flex items-center space-x-2 cursor-pointer">
+                                                <input type="radio" name="fuente_credito" value="no" onchange="toggleValorFuente('credito', false)" checked class="text-primary focus:ring-primary" />
+                                                <span class="text-sm">No</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div id="valor_credito_container" class="hidden pl-4">
+                                        <div class="flex items-center space-x-2">
+                                            <label class="text-sm text-gray-600 w-16">Valor</label>
+                                            <input type="number" id="valor_credito" min="0" step="0.01" onchange="calcularTotalFuentes()" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="0.00" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Otros Recursos -->
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-medium text-gray-700">Otros Recursos (Especie, Privados, Cooperación, Propios Entidades Autónomas)</span>
+                                        <div class="flex items-center space-x-4">
+                                            <label class="flex items-center space-x-2 cursor-pointer">
+                                                <input type="radio" name="fuente_otros" value="si" onchange="toggleValorFuente('otros', true)" class="text-primary focus:ring-primary" />
+                                                <span class="text-sm">Sí</span>
+                                            </label>
+                                            <label class="flex items-center space-x-2 cursor-pointer">
+                                                <input type="radio" name="fuente_otros" value="no" onchange="toggleValorFuente('otros', false)" checked class="text-primary focus:ring-primary" />
+                                                <span class="text-sm">No</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div id="valor_otros_container" class="hidden pl-4">
+                                        <div class="flex items-center space-x-2">
+                                            <label class="text-sm text-gray-600 w-16">Valor</label>
+                                            <input type="number" id="valor_otros" min="0" step="0.01" onchange="calcularTotalFuentes()" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="0.00" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Total -->
+                                <div class="pt-3 border-t border-gray-300">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-bold text-gray-800">Total</span>
+                                        <span id="total_fuentes" class="text-lg font-bold text-primary">0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fecha de inicio del contrato -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Fecha de inicio del contrato <span class="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="date"
+                                id="fechaInicio"
+                                required
+                                onchange="calcularDuracion()"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                            />
+                        </div>
+
+                        <!-- Fecha de terminación del contrato -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Fecha de terminación del contrato <span class="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="date"
+                                id="fechaTerminacion"
+                                required
+                                onchange="calcularDuracion()"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                            />
+                        </div>
+
+                        <!-- Duración del contrato (calculado automáticamente) -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Duración del contrato
+                            </label>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <input
+                                        type="number"
+                                        id="duracionAnios"
+                                        readonly
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
+                                        placeholder="0"
+                                    />
+                                    <p class="text-xs text-gray-500 mt-1">Años</p>
+                                </div>
+                                <div>
+                                    <input
+                                        type="number"
+                                        id="duracionMeses"
+                                        readonly
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
+                                        placeholder="0"
+                                    />
+                                    <p class="text-xs text-gray-500 mt-1">Meses</p>
+                                </div>
+                                <div>
+                                    <input
+                                        type="number"
+                                        id="duracionDias"
+                                        readonly
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
+                                        placeholder="0"
+                                    />
+                                    <p class="text-xs text-gray-500 mt-1">Días</p>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                        </div>
+
+                        <!-- Tab 2: Sección 2 (Placeholder) -->
+                        <div id="tab-content-2" class="tab-content hidden">
+                            <div class="text-center py-12">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">Sección 2</h3>
+                                <p class="mt-1 text-sm text-gray-500">Contenido pendiente por definir</p>
+                            </div>
+                        </div>
+
+                        <!-- Tab 3: Sección 3 (Placeholder) -->
+                        <div id="tab-content-3" class="tab-content hidden">
+                            <div class="text-center py-12">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">Sección 3</h3>
+                                <p class="mt-1 text-sm text-gray-500">Contenido pendiente por definir</p>
+                            </div>
+                        </div>
+
+                        <!-- Tab 4: Sección 4 (Placeholder) -->
+                        <div id="tab-content-4" class="tab-content hidden">
+                            <div class="text-center py-12">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">Sección 4</h3>
+                                <p class="mt-1 text-sm text-gray-500">Contenido pendiente por definir</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </form>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Descripción
-                    </label>
-                    <textarea
-                        rows="3"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                        placeholder="Descripción del documento (opcional)"></textarea>
-                </div>
-
-                <div class="flex gap-3">
+                <!-- Botones de acción (Fixed) -->
+                <div class="flex gap-3 p-6 border-t border-gray-200 bg-white rounded-b-lg flex-shrink-0">
                     <button
                         type="button"
-                        onclick="document.getElementById('uploadModal').classList.add('hidden')"
-                        class="flex-1 border-2 border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-50 transition duration-200">
+                        onclick="closeUploadModal()"
+                        class="flex-1 border-2 border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-semibold hover:bg-gray-50 transition duration-200">
                         Cancelar
                     </button>
                     <button
-                        type="submit"
-                        class="flex-1 bg-primary text-white py-2 px-4 rounded-lg font-semibold hover:bg-opacity-90 transition duration-200">
-                        Cargar
+                        type="button"
+                        onclick="submitForm()"
+                        class="flex-1 bg-primary text-white py-3 px-4 rounded-lg font-semibold hover:bg-opacity-90 transition duration-200">
+                        Guardar Contrato
                     </button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <script>
-        // Cargar entidad seleccionada
+        // Cargar entidad seleccionada y verificar tipo de usuario
         window.addEventListener('DOMContentLoaded', function() {
             const entity = sessionStorage.getItem('selectedEntity');
+            const userType = sessionStorage.getItem('userType');
+
             if (entity) {
                 document.getElementById('selectedEntity').textContent = entity;
             }
+
+            // Ocultar botón de cargar contrato si es administrador
+            if (userType === 'administrador') {
+                const cargarContratoBtn = document.getElementById('cargarContratoBtn');
+                if (cargarContratoBtn) {
+                    cargarContratoBtn.style.display = 'none';
+                }
+            }
         });
 
-        // Manejar envío del formulario de carga
-        document.getElementById('uploadForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('Documento cargado exitosamente');
+        // Función para cerrar el modal
+        function closeUploadModal() {
             document.getElementById('uploadModal').classList.add('hidden');
+            document.getElementById('uploadForm').reset();
+
+            // Ocultar el campo de OTRO tipo de contrato
+            document.getElementById('otroTipoContratoContainer').classList.add('hidden');
+
+            // Limpiar campos de duración
+            document.getElementById('duracionAnios').value = '';
+            document.getElementById('duracionMeses').value = '';
+            document.getElementById('duracionDias').value = '';
+
+            // Ocultar todos los campos de valor de fuente de recursos
+            const fuentes = ['pgn', 'sgp', 'sgr', 'propios', 'credito', 'otros'];
+            fuentes.forEach(fuente => {
+                const container = document.getElementById('valor_' + fuente + '_container');
+                const input = document.getElementById('valor_' + fuente);
+                container.classList.add('hidden');
+                input.value = '';
+                input.required = false;
+            });
+
+            // Resetear el total
+            document.getElementById('total_fuentes').textContent = '0.00';
+
+            // Volver al primer tab
+            switchTab(1);
+        }
+
+        // Función para mostrar/ocultar campo de OTRO tipo de contrato
+        function toggleOtroTipoContrato() {
+            const tipoContrato = document.getElementById('tipoContrato').value;
+            const otroContainer = document.getElementById('otroTipoContratoContainer');
+            const otroInput = document.getElementById('otroTipoContrato');
+
+            if (tipoContrato === 'otro') {
+                otroContainer.classList.remove('hidden');
+                otroInput.required = true;
+            } else {
+                otroContainer.classList.add('hidden');
+                otroInput.required = false;
+                otroInput.value = '';
+            }
+        }
+
+        // Función para calcular la duración del contrato
+        function calcularDuracion() {
+            const fechaInicio = document.getElementById('fechaInicio').value;
+            const fechaTerminacion = document.getElementById('fechaTerminacion').value;
+
+            if (fechaInicio && fechaTerminacion) {
+                const inicio = new Date(fechaInicio);
+                const fin = new Date(fechaTerminacion);
+
+                // Validar que la fecha de terminación sea posterior a la fecha de inicio
+                if (fin <= inicio) {
+                    alert('La fecha de terminación debe ser posterior a la fecha de inicio');
+                    document.getElementById('fechaTerminacion').value = '';
+                    document.getElementById('duracionAnios').value = '';
+                    document.getElementById('duracionMeses').value = '';
+                    document.getElementById('duracionDias').value = '';
+                    return;
+                }
+
+                // Calcular la diferencia en milisegundos
+                let diffMs = fin - inicio;
+
+                // Convertir a días
+                const totalDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+                // Calcular años, meses y días
+                const anios = Math.floor(totalDias / 365);
+                const diasRestantesAnios = totalDias % 365;
+                const meses = Math.floor(diasRestantesAnios / 30);
+                const dias = diasRestantesAnios % 30;
+
+                // Actualizar los campos
+                document.getElementById('duracionAnios').value = anios;
+                document.getElementById('duracionMeses').value = meses;
+                document.getElementById('duracionDias').value = dias;
+            }
+        }
+
+        // Función para mostrar/ocultar campos de valor de fuente
+        function toggleValorFuente(fuente, mostrar) {
+            const container = document.getElementById('valor_' + fuente + '_container');
+            const input = document.getElementById('valor_' + fuente);
+
+            if (mostrar) {
+                container.classList.remove('hidden');
+                input.required = true;
+            } else {
+                container.classList.add('hidden');
+                input.required = false;
+                input.value = '';
+                calcularTotalFuentes();
+            }
+        }
+
+        // Función para calcular el total de fuentes de recursos
+        function calcularTotalFuentes() {
+            const fuentes = ['pgn', 'sgp', 'sgr', 'propios', 'credito', 'otros'];
+            let total = 0;
+
+            fuentes.forEach(fuente => {
+                const input = document.getElementById('valor_' + fuente);
+                const valor = parseFloat(input.value) || 0;
+                total += valor;
+            });
+
+            // Formatear el total con separadores de miles
+            const totalFormateado = total.toLocaleString('es-CO', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            document.getElementById('total_fuentes').textContent = totalFormateado;
+        }
+
+        // Validar que al menos una fuente de recursos esté seleccionada
+        function validarFuenteRecursos() {
+            const fuentes = ['pgn', 'sgp', 'sgr', 'propios', 'credito', 'otros'];
+            let alMenosUna = false;
+
+            fuentes.forEach(fuente => {
+                const radioSi = document.querySelector(`input[name="fuente_${fuente}"][value="si"]`);
+                if (radioSi && radioSi.checked) {
+                    alMenosUna = true;
+                    // Validar que tenga un valor ingresado
+                    const input = document.getElementById('valor_' + fuente);
+                    const valor = parseFloat(input.value) || 0;
+                    if (valor <= 0) {
+                        alert(`Debe ingresar un valor válido para la fuente de recursos seleccionada: ${fuente.toUpperCase()}`);
+                        return false;
+                    }
+                }
+            });
+
+            if (!alMenosUna) {
+                alert('Debe seleccionar al menos una fuente de recursos');
+                return false;
+            }
+
+            return true;
+        }
+
+        // Función para cambiar de tab
+        function switchTab(tabNumber) {
+            // Ocultar todos los contenidos de tabs
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Desactivar todos los botones de tab
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // Mostrar el contenido del tab seleccionado
+            document.getElementById('tab-content-' + tabNumber).classList.remove('hidden');
+
+            // Activar el botón del tab seleccionado
+            document.getElementById('tab-' + tabNumber).classList.add('active');
+        }
+
+        // Función para validar y enviar el formulario
+        function submitForm() {
+            // Validar fuente de recursos
+            if (!validarFuenteRecursos()) {
+                // Cambiar al tab 1 si hay error en validación
+                switchTab(1);
+                return;
+            }
+
+            // Recolectar fuentes de recursos seleccionadas
+            const fuentes = ['pgn', 'sgp', 'sgr', 'propios', 'credito', 'otros'];
+            const fuenteRecursos = {};
+
+            fuentes.forEach(fuente => {
+                const radioSi = document.querySelector(`input[name="fuente_${fuente}"][value="si"]`);
+                if (radioSi && radioSi.checked) {
+                    const input = document.getElementById('valor_' + fuente);
+                    fuenteRecursos[fuente] = parseFloat(input.value) || 0;
+                }
+            });
+
+            // Recolectar datos del formulario
+            const formData = {
+                numeroProceso: document.getElementById('numeroProceso').value,
+                numeroContrato: document.getElementById('numeroContrato').value,
+                objetoContrato: document.getElementById('objetoContrato').value,
+                tipoContrato: document.getElementById('tipoContrato').value,
+                otroTipoContrato: document.getElementById('otroTipoContrato').value,
+                justificacionTipo: document.getElementById('justificacionTipo').value,
+                valorContrato: document.getElementById('valorContrato').value,
+                destinacionGasto: document.getElementById('destinacionGasto').value,
+                fuenteRecursos: fuenteRecursos,
+                totalFuenteRecursos: document.getElementById('total_fuentes').textContent,
+                fechaInicio: document.getElementById('fechaInicio').value,
+                fechaTerminacion: document.getElementById('fechaTerminacion').value,
+                duracionAnios: document.getElementById('duracionAnios').value,
+                duracionMeses: document.getElementById('duracionMeses').value,
+                duracionDias: document.getElementById('duracionDias').value
+            };
+
+            console.log('Datos del contrato:', formData);
+            alert('Contrato guardado exitosamente');
+            closeUploadModal();
+        }
+
+        // Función para buscar contratos
+        function buscarContratos() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const rows = document.querySelectorAll('#contractsTableBody tr');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const id = row.cells[0].textContent.toLowerCase();
+                const numeroContrato = row.cells[1].textContent.toLowerCase();
+                const entidad = row.cells[2].textContent.toLowerCase();
+
+                // Buscar en ID, número de contrato y entidad
+                if (id.includes(searchTerm) ||
+                    numeroContrato.includes(searchTerm) ||
+                    entidad.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Actualizar mensaje de resultados
+            actualizarMensajeResultados(visibleCount, rows.length);
+        }
+
+        // Función para actualizar el mensaje de resultados
+        function actualizarMensajeResultados(visibles, total) {
+            const mensajeElement = document.querySelector('.bg-gray-50.px-4.py-3 p');
+            if (mensajeElement) {
+                if (visibles === 0) {
+                    mensajeElement.innerHTML = 'No se encontraron resultados';
+                } else if (visibles === total) {
+                    mensajeElement.innerHTML = `Mostrando <span class="font-semibold">1</span> a <span class="font-semibold">${visibles}</span> de <span class="font-semibold">${total}</span> resultados`;
+                } else {
+                    mensajeElement.innerHTML = `Mostrando <span class="font-semibold">${visibles}</span> de <span class="font-semibold">${total}</span> resultados`;
+                }
+            }
+        }
+
+        // Función para manejar la búsqueda al presionar Enter
+        function handleSearchKeyup(event) {
+            if (event.key === 'Enter') {
+                buscarContratos();
+            }
+        }
+
+        // Limpiar búsqueda cuando el campo está vacío
+        document.getElementById('searchInput').addEventListener('input', function() {
+            if (this.value.trim() === '') {
+                buscarContratos();
+            }
         });
     </script>
 </body>
