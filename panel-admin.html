@@ -363,17 +363,20 @@
                             <select
                                 id="tipoContrato"
                                 required
-                                onchange="toggleOtroTipoContrato()"
+                                onchange="handleTipoContratoChange()"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                                 <option value="">Seleccione el tipo de contrato</option>
-                                <option value="prestacion_servicios">Prestación de Servicios</option>
+                                <option value="arrendamiento_inmuebles">Arrendamiento de inmuebles</option>
+                                <option value="comodato">Comodato</option>
                                 <option value="compraventa">Compraventa</option>
-                                <option value="suministro">Suministro</option>
+                                <option value="negocio_fiduciario">Negocio fiduciario</option>
                                 <option value="obra">Obra</option>
-                                <option value="consultoría">Consultoría</option>
-                                <option value="concesion">Concesión</option>
-                                <option value="arrendamiento">Arrendamiento</option>
-                                <option value="otro">OTRO</option>
+                                <option value="operaciones_credito_publico">Operaciones de Crédito Público</option>
+                                <option value="otro">Otro</option>
+                                <option value="prestacion_servicios">Prestación de servicios</option>
+                                <option value="seguros">Seguros</option>
+                                <option value="servicios_financieros">Servicios financieros</option>
+                                <option value="suministro">Suministro</option>
                             </select>
                         </div>
 
@@ -390,17 +393,15 @@
                             />
                         </div>
 
-                        <!-- Justificación del tipo de contrato -->
-                        <div class="md:col-span-2">
+                        <!-- Justificación de la modalidad de contratación (aparece dinámicamente) -->
+                        <div id="justificacionModalidadContainer" class="hidden md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Justificación del tipo de contrato <span class="text-red-500">*</span>
+                                Justificación de la modalidad de contratación <span class="text-red-500">*</span>
                             </label>
                             <select
-                                id="justificacionTipo"
-                                required
+                                id="justificacionModalidad"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
-                                <option value="">Seleccione la justificación</option>
-                                <option value="pendiente">Pendiente por definir (SOLICITAR LISTA A MARCELA)</option>
+                                <option value="">Seleccione</option>
                             </select>
                         </div>
 
@@ -742,6 +743,13 @@
             // Ocultar el campo de OTRO tipo de contrato
             document.getElementById('otroTipoContratoContainer').classList.add('hidden');
 
+            // Ocultar y limpiar el campo de justificación de modalidad
+            const justificacionContainer = document.getElementById('justificacionModalidadContainer');
+            const justificacionSelect = document.getElementById('justificacionModalidad');
+            justificacionContainer.classList.add('hidden');
+            justificacionSelect.innerHTML = '<option value="">Seleccione</option>';
+            justificacionSelect.required = false;
+
             // Limpiar campos de duración
             document.getElementById('duracionAnios').value = '';
             document.getElementById('duracionMeses').value = '';
@@ -764,12 +772,15 @@
             switchTab(1);
         }
 
-        // Función para mostrar/ocultar campo de OTRO tipo de contrato
-        function toggleOtroTipoContrato() {
+        // Función principal para manejar el cambio de tipo de contrato
+        function handleTipoContratoChange() {
             const tipoContrato = document.getElementById('tipoContrato').value;
             const otroContainer = document.getElementById('otroTipoContratoContainer');
             const otroInput = document.getElementById('otroTipoContrato');
+            const justificacionContainer = document.getElementById('justificacionModalidadContainer');
+            const justificacionSelect = document.getElementById('justificacionModalidad');
 
+            // Manejar campo OTRO
             if (tipoContrato === 'otro') {
                 otroContainer.classList.remove('hidden');
                 otroInput.required = true;
@@ -778,7 +789,153 @@
                 otroInput.required = false;
                 otroInput.value = '';
             }
+
+            // Manejar justificación de modalidad
+            if (tipoContrato && tipoContrato !== '' && justificacionesMap[tipoContrato]) {
+                // Limpiar opciones existentes
+                justificacionSelect.innerHTML = '<option value="">Seleccione</option>';
+
+                // Agregar las nuevas opciones
+                justificacionesMap[tipoContrato].forEach((opcion) => {
+                    const option = document.createElement('option');
+                    option.value = opcion.toLowerCase().replace(/\s+/g, '_').replace(/[()–.]/g, '');
+                    option.textContent = opcion;
+                    justificacionSelect.appendChild(option);
+                });
+
+                // Mostrar el contenedor y hacer el campo requerido
+                justificacionContainer.classList.remove('hidden');
+                justificacionSelect.required = true;
+            } else {
+                // Ocultar el contenedor y remover el requerido
+                justificacionContainer.classList.add('hidden');
+                justificacionSelect.required = false;
+                justificacionSelect.innerHTML = '<option value="">Seleccione</option>';
+            }
         }
+
+        // Mapeo de opciones de justificación según el tipo de contrato
+        const justificacionesMap = {
+            'arrendamiento_inmuebles': [
+                'Arrendamiento de inmuebles',
+                'Asociaciones Público Populares (Art. 100 Ley 2094/23)',
+                'Consejos comunitarios de las comunidades negras (Lit. m) del Art. 2.4 Ley 1150/07)',
+                'Convenios solidarios – Obras hasta la menor cuantía – Organismos acción comunal (Art. 95 Ley 2166/21)',
+                'Organizaciones de base – Poblaciones afrocolombianas, raizales y palenqueras – Demás formas y expresiones organizativas (Lit. n) del Art. 2.4 Ley 1150/07)',
+                'Productos agropecuarios – Pueblos y comunidades indígenas – Comunidades negras, afrocolombianas, raizales y palenqueras, organizaciones y asociaciones campesinas (Lit. o) Art. 2.4 Ley 1150/07)',
+                'Urgencia manifiesta'
+            ],
+            'comodato': [
+                'Asociaciones Público Populares (Art. 100 Ley 2094/23)',
+                'Consejos comunitarios de las comunidades negras (Lit. m) del Art. 2.4 Ley 1150/07)',
+                'Convenios solidarios – Obras hasta la menor cuantía – Organismos acción comunal (Art. 95 Ley 2166/21)',
+                'Organizaciones de base – Poblaciones afrocolombianas, raizales y palenqueras – Demás formas y expresiones organizativas (Lit. n) del Art. 2.4 Ley 1150/07)',
+                'Prestamo de uso',
+                'Productos agropecuarios – Pueblos y comunidades indígenas – Comunidades negras, afrocolombianas, raizales y palenqueras, organizaciones y asociaciones campesinas (Lit. o) Art. 2.4 Ley 1150/07)'
+            ],
+            'compraventa': [
+                'Asociaciones Público Populares (Art. 100 Ley 2094/23)',
+                'Consejos comunitarios de las comunidades negras (Lit. m) del Art. 2.4 Ley 1150/07)',
+                'Contratos de bienes y servicios sujetos a reserva',
+                'Contratos o convenios Interadministrativos (valor cero)',
+                'Contratos para el desarrollo de actividades científicas y tecnológicas',
+                'Convenios solidarios – Obras hasta la menor cuantía – Organismos acción comunal (Art. 95 Ley 2166/21)',
+                'No existe pluralidad de oferentes en el mercado',
+                'Organizaciones de base – Poblaciones afrocolombianas, raizales y palenqueras – Demás formas y expresiones organizativas (Lit. n) del Art. 2.4 Ley 1150/07)',
+                'Productos agropecuarios – Pueblos y comunidades indígenas – Comunidades negras, afrocolombianas, raizales y palenqueras, organizaciones y asociaciones campesinas (Lit. o) Art. 2.4 Ley 1150/07)',
+                'Urgencia manifiesta'
+            ],
+            'negocio_fiduciario': [
+                'Asociaciones Público Populares (Art. 100 Ley 2094/23)',
+                'Consejos comunitarios de las comunidades negras (Lit. m) del Art. 2.4 Ley 1150/07)',
+                'Contratos de bienes y servicios sujetos a reserva',
+                'Contratos para el desarrollo de actividades científicas y tecnológicas',
+                'Convenios solidarios – Obras hasta la menor cuantía – Organismos acción comunal (Art. 95 Ley 2166/21)',
+                'Organizaciones de base – Poblaciones afrocolombianas, raizales y palenqueras – Demás formas y expresiones organizativas (Lit. n) del Art. 2.4 Ley 1150/07)',
+                'Productos agropecuarios – Pueblos y comunidades indígenas – Comunidades negras, afrocolombianas, raizales y palenqueras, organizaciones y asociaciones campesinas (Lit. o) Art. 2.4 Ley 1150/07)',
+                'Urgencia manifiesta'
+            ],
+            'obra': [
+                'Asociaciones Público Populares (Art. 100 Ley 2094/23)',
+                'Consejos comunitarios de las comunidades negras (Lit. m) del Art. 2.4 Ley 1150/07)',
+                'Contratos de bienes y servicios sujetos a reserva',
+                'Contratos o convenios Interadministrativos (valor cero)',
+                'Contratos para el desarrollo de actividades científicas y tecnológicas',
+                'Convenios solidarios – Obras hasta la menor cuantía – Organismos acción comunal (Art. 95 Ley 2166/21)',
+                'Convenios Solidarios - Régimen artículo 95, Ley 2166 de 2021',
+                'No existe pluralidad de oferentes en el mercado',
+                'Organizaciones de base – Poblaciones afrocolombianas, raizales y palenqueras – Demás formas y expresiones organizativas (Lit. n) del Art. 2.4 Ley 1150/07)',
+                'Productos agropecuarios – Pueblos y comunidades indígenas – Comunidades negras, afrocolombianas, raizales y palenqueras, organizaciones y asociaciones campesinas (Lit. o) Art. 2.4 Ley 1150/07)',
+                'Urgencia manifiesta'
+            ],
+            'operaciones_credito_publico': [
+                'Asociaciones Público Populares (Art. 100 Ley 2094/23)',
+                'Consejos comunitarios de las comunidades negras (Lit. m) del Art. 2.4 Ley 1150/07)',
+                'Convenios solidarios – Obras hasta la menor cuantía – Organismos acción comunal (Art. 95 Ley 2166/21)',
+                'Operaciones de Crédito Público',
+                'Organizaciones de base – Poblaciones afrocolombianas, raizales y palenqueras – Demás formas y expresiones organizativas (Lit. n) del Art. 2.4 Ley 1150/07)',
+                'Productos agropecuarios – Pueblos y comunidades indígenas – Comunidades negras, afrocolombianas, raizales y palenqueras, organizaciones y asociaciones campesinas (Lit. o) Art. 2.4 Ley 1150/07)'
+            ],
+            'otro': [
+                'Adquisición de inmuebles',
+                'Asociaciones Público Populares (Art. 100 Ley 2094/23)',
+                'Consejos comunitarios de las comunidades negras (Lit. m) del Art. 2.4 Ley 1150/07)',
+                'Contratos de bienes y servicios sujetos a reserva',
+                'Contratos o convenios Interadministrativos (valor cero)',
+                'Contratos para el desarrollo de actividades científicas y tecnológicas',
+                'Convenios solidarios – Obras hasta la menor cuantía – Organismos acción comunal (Art. 95 Ley 2166/21)',
+                'No existe pluralidad de oferentes en el mercado',
+                'Organizaciones de base – Poblaciones afrocolombianas, raizales y palenqueras – Demás formas y expresiones organizativas (Lit. n) del Art. 2.4 Ley 1150/07)',
+                'Productos agropecuarios – Pueblos y comunidades indígenas – Comunidades negras, afrocolombianas, raizales y palenqueras, organizaciones y asociaciones campesinas (Lit. o) Art. 2.4 Ley 1150/07)',
+                'Urgencia manifiesta'
+            ],
+            'prestacion_servicios': [
+                'Asociaciones Público Populares (Art. 100 Ley 2094/23)',
+                'Consejos comunitarios de las comunidades negras (Lit. m) del Art. 2.4 Ley 1150/07)',
+                'Contratos de bienes y servicios sujetos a reserva',
+                'Contratos de bienes y servicios sujetos a reserva',
+                'Contratos para el desarrollo de actividades científicas y tecnológicas',
+                'Contratos para el desarrollo de actividades científicas y tecnológicas',
+                'Convenios solidarios – Obras hasta la menor cuantía – Organismos acción comunal (Art. 95 Ley 2166/21)',
+                'Ejecución de trabajos artísticos',
+                'No existe pluralidad de oferentes en el mercado',
+                'No existe pluralidad de oferentes en el mercado',
+                'Organizaciones de base – Poblaciones afrocolombianas, raizales y palenqueras – Demás formas y expresiones organizativas (Lit. n) del Art. 2.4 Ley 1150/07)',
+                'Productos agropecuarios – Pueblos y comunidades indígenas – Comunidades negras, afrocolombianas, raizales y palenqueras, organizaciones y asociaciones campesinas (Lit. o) Art. 2.4 Ley 1150/07)',
+                'Servicios profesionales y apoyo a la gestión',
+                'Urgencia manifiesta'
+            ],
+            'seguros': [
+                'Asociaciones Público Populares (Art. 100 Ley 2094/23)',
+                'Consejos comunitarios de las comunidades negras (Lit. m) del Art. 2.4 Ley 1150/07)',
+                'Contratos de bienes y servicios sujetos a reserva',
+                'Convenios solidarios – Obras hasta la menor cuantía – Organismos acción comunal (Art. 95 Ley 2166/21)',
+                'Organizaciones de base – Poblaciones afrocolombianas, raizales y palenqueras – Demás formas y expresiones organizativas (Lit. n) del Art. 2.4 Ley 1150/07)',
+                'Productos agropecuarios – Pueblos y comunidades indígenas – Comunidades negras, afrocolombianas, raizales y palenqueras, organizaciones y asociaciones campesinas (Lit. o) Art. 2.4 Ley 1150/07)',
+                'Urgencia manifiesta'
+            ],
+            'servicios_financieros': [
+                'Asociaciones Público Populares (Art. 100 Ley 2094/23)',
+                'Consejos comunitarios de las comunidades negras (Lit. m) del Art. 2.4 Ley 1150/07)',
+                'Contratos o convenios Interadministrativos (valor cero)',
+                'Convenios solidarios – Obras hasta la menor cuantía – Organismos acción comunal (Art. 95 Ley 2166/21)',
+                'Organizaciones de base – Poblaciones afrocolombianas, raizales y palenqueras – Demás formas y expresiones organizativas (Lit. n) del Art. 2.4 Ley 1150/07)',
+                'Productos agropecuarios – Pueblos y comunidades indígenas – Comunidades negras, afrocolombianas, raizales y palenqueras, organizaciones y asociaciones campesinas (Lit. o) Art. 2.4 Ley 1150/07)',
+                'Urgencia manifiesta'
+            ],
+            'suministro': [
+                'Asociaciones Público Populares (Art. 100 Ley 2094/23)',
+                'Consejos comunitarios de las comunidades negras (Lit. m) del Art. 2.4 Ley 1150/07)',
+                'Contratos de bienes y servicios sujetos a reserva',
+                'Contratos o convenios Interadministrativos (valor cero)',
+                'Contratos para el desarrollo de actividades científicas y tecnológicas',
+                'Convenios solidarios – Obras hasta la menor cuantía – Organismos acción comunal (Art. 95 Ley 2166/21)',
+                'No existe pluralidad de oferentes en el mercado',
+                'Organizaciones de base – Poblaciones afrocolombianas, raizales y palenqueras – Demás formas y expresiones organizativas (Lit. n) del Art. 2.4 Ley 1150/07)',
+                'Productos agropecuarios – Pueblos y comunidades indígenas – Comunidades negras, afrocolombianas, raizales y palenqueras, organizaciones y asociaciones campesinas (Lit. o) Art. 2.4 Ley 1150/07)',
+                'Urgencia manifiesta'
+            ]
+        };
 
         // Función para calcular la duración del contrato
         function calcularDuracion() {
@@ -928,7 +1085,7 @@
                 objetoContrato: document.getElementById('objetoContrato').value,
                 tipoContrato: document.getElementById('tipoContrato').value,
                 otroTipoContrato: document.getElementById('otroTipoContrato').value,
-                justificacionTipo: document.getElementById('justificacionTipo').value,
+                justificacionModalidad: document.getElementById('justificacionModalidad').value,
                 valorContrato: document.getElementById('valorContrato').value,
                 destinacionGasto: document.getElementById('destinacionGasto').value,
                 fuenteRecursos: fuenteRecursos,
